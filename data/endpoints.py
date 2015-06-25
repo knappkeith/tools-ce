@@ -1,6 +1,6 @@
 ALL_GLOBAL_DATA = {
     'authenticate'      : '/authentication/authenticate',
-    'test'              : '/accounts/quotes/a5p190000008P7h',
+    'WOODII_930_1'      : '/accounts/8888/creditbalances',
     'authenticate_v2'   : {
         'url'       : '/authentication/authenticate',
         'params'    : {
