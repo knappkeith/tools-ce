@@ -1,24 +1,23 @@
 ALL_GLOBAL_DATA = {
-    'authenticate'      : '/authentication/authenticate',
-    'WOODII_930_1'      : '/accounts/8888/creditbalances',
-    'authenticate_v2'   : {
-        'url'       : '/authentication/authenticate',
-        'params'    : {
-            'userId'    : '{USER_NAME}',
-            'password'  : '{PASSWORD}'
+    'authenticate': '/authentication/authenticate',
+    'WOODII_930_1': '/accounts/8888/creditbalances',
+    'authenticate_v2': {
+        'url': '/authentication/authenticate',
+        'params': {
+            'userId': '{USER_NAME}',
+            'password': '{PASSWORD}'
         },
-        'header'    : {
-            'Accept'    : 'application/json'
+        'header': {
+            'Accept': 'application/json'
         },
-        'data'      : ''
+        'data': ''
     }
 }
 
 ALL_ENV_DATA = {
-    
-    'LOCAL' : {}
-
+    'LOCAL': {}
 }
+
 
 def build_variables(environment):
     if environment == 'DEFAULT':

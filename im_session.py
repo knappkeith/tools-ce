@@ -4,6 +4,7 @@ from data.environment_data import build_variables
 from data.endpoints import build_variables as build_endpoints
 from lib.my_url import My_URL
 
+
 class Ce_Session(object):
     def __init__(self, environment=None, auto_auth=True):
         if environment is None:
@@ -24,22 +25,18 @@ class Ce_Session(object):
         if auto_auth:
             self.authenticate()
 
-
     def _get_variables(self, environment):
         return build_variables(environment)
 
-    
     def _get_endpoints(self, environment):
         return build_endpoints(environment)
 
-    
     def _build_initial_header(self):
         header = {
             'Accept': 'application/json'
         }
         return header
-    
-    
+
     def _build_params(self):
         params = {
             'userId': self.ENV_VAR['USER_NAME'],
@@ -47,22 +44,17 @@ class Ce_Session(object):
         }
         return params
 
-    
     def _build_url(self, endpoint):
         return self.my_url.build_url(endpoint)
 
-    
     def get_url(self, endpoint):
         return self._build_url(self.END_POINTS[endpoint])
 
-    
     def get_header(self):
         return self._build_header()
 
-    
     def get_params(self):
         return self._build_params()
-    
 
     def authenticate(self):
         params = self.get_params()
@@ -83,5 +75,3 @@ class Ce_Session(object):
         http_response = self.session.request('get', self.get_url(endpoint), params=params, headers=header, data=data)
         self.history.append(http_response)
         return http_response
-
-

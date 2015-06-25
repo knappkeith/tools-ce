@@ -1,5 +1,6 @@
 from urlparse import urlparse, urlunparse
 
+
 class My_URL(object):
     def __init__(self, base_url):
         self.base_url_parsed = urlparse(base_url)
@@ -56,23 +57,22 @@ class My_URL(object):
 
     def _build_current_dictionary(self):
         current_parse = {
-            'scheme':self._SCHEME,
-            'netloc':self._NETLOC,
-            'path':self._PATH,
-            'params':self._PARAMS,
-            'query':self._QUERY,
-            'fragment':self._FRAGMENT,
-            'username':self._USERNAME,
-            'password':self._PASSWORD,
-            'hostname':self._HOSTNAME,
-            'port':self._PORT
+            'scheme': self._SCHEME,
+            'netloc': self._NETLOC,
+            'path': self._PATH,
+            'params': self._PARAMS,
+            'query': self._QUERY,
+            'fragment': self._FRAGMENT,
+            'username': self._USERNAME,
+            'password': self._PASSWORD,
+            'hostname': self._HOSTNAME,
+            'port': self._PORT
         }
         return current_parse
 
     def _build_path(self, to_add):
         org_path = self.current_values['path']
         return "/".join([org_path.strip('/'), to_add.strip('/')])
-
 
     def build_url(self, add_to_path=None):
         if add_to_path is not None:
@@ -94,10 +94,3 @@ class My_URL(object):
         unparse_array.append(self.current_values['query'])
         unparse_array.append(self.current_values['fragment'])
         return tuple(unparse_array)
-
-
-
-
-
-
-    
