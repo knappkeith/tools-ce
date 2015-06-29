@@ -75,3 +75,8 @@ class Ce_Session(object):
         http_response = self.session.request('get', self.get_url(endpoint), params=params, headers=header, data=data)
         self.history.append(http_response)
         return http_response
+
+    def verify_endpoint_response_code(self, method, endpoint, status, params=None, header=None, data=None):
+        returned_status = self.hit_endpoint(method, endpoint, params=None, header=None, data=None).status_code
+        if returned_status != status:
+            print "The expected status of %d was not returned, instead a status code of %d was returned! History Index of %d." % (status, returned_status, len(self.history))

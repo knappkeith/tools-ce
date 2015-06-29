@@ -1,6 +1,9 @@
 ALL_GLOBAL_DATA = {
     'authenticate': '/authentication/authenticate',
     'WOODII_930_1': '/accounts/8888/creditbalances',
+    'WOODII_906_1': '/accounts/quotes/a5p190000008P7h',
+    'Maintence_Flag': '/systemstatus',
+    'Residence_R87': '/residences/R87',
     'authenticate_v2': {
         'url': '/authentication/authenticate',
         'params': {
