@@ -12,6 +12,10 @@ class JSON_Schema_Parser(object):
             self.wrap_it()
 
     def _load_json(self):
+        # if isinstance(self.json_obj, str):
+        #     self.json_str = json.loads(self.json_obj)
+        # else:
+        #     self.json_str = self.json_obj
         self.json_str = json.loads(self.json_obj)
 
     def build_schema(self):
@@ -23,6 +27,8 @@ class JSON_Schema_Parser(object):
     def wrap_it(self):
         self.final_shema = "var schema = %s;" % self.main_str
 
-    def print_it(self):
-        self.pretty_json = json_tools.pretty_print_it(self.main_out)
+    def print_it(self, what_2_print=None):
+        if what_2_print is None:
+            what_2_print = self.main_out
+        self.pretty_json = json_tools.pretty_print_it(what_2_print)
         print self.pretty_json

@@ -3,6 +3,7 @@ import os
 from data.environment_data import build_variables
 from data.endpoints import build_variables as build_endpoints
 from lib.my_url import My_URL
+from lib.my_request import My_Request
 
 
 class Ce_Session(object):
@@ -47,8 +48,11 @@ class Ce_Session(object):
     def _build_url(self, endpoint):
         return self.my_url.build_url(endpoint)
 
-    def get_url(self, endpoint):
-        return self._build_url(self.END_POINTS[endpoint])
+    def get_url(self, endpoint, url_vars):
+        if url_vars is None:
+            return self._build_url(self.END_POINTS[endpoint])
+        else:
+            return self._build_url(self.END_POINTS[endpoint]).format(url_vars)
 
     def get_header(self):
         return self._build_header()
@@ -69,14 +73,30 @@ class Ce_Session(object):
         self.history.append(auth_attempt)
         return auth_attempt
 
-    def hit_endpoint(self, method, endpoint, params=None, header=None, data=None):
+    def get_endpoint_info_v2(self, endpoint):
+        this_request = My_Request()
+        My_Request.URL = self.get_url()
+    
+    def hit_endpoint_v2(self, endpoint_v2):
+        endpoint_info_v2 = self.get_endpoint_info_v2(endpoint_v2)
+
+    def hit_endpoint(self, method, endpoint, params=None, header=None, data=None, url_vars=None):
         if header is None:
             header = self.header
-        http_response = self.session.request('get', self.get_url(endpoint), params=params, headers=header, data=data)
+        http_response = self.session.request(method, self.get_url(endpoint, url_vars), params=params, headers=header, data=data)
         self.history.append(http_response)
         return http_response
 
-    def verify_endpoint_response_code(self, method, endpoint, status, params=None, header=None, data=None):
-        returned_status = self.hit_endpoint(method, endpoint, params=None, header=None, data=None).status_code
+    def verify_endpoint_response_code(self, method, endpoint, status, params=None, header=None, data=None, url_vars=None):
+        returned_status = self.hit_endpoint(method, endpoint, params, header, data, url_vars).status_code
         if returned_status != status:
             print "The expected status of %d was not returned, instead a status code of %d was returned! History Index of %d." % (status, returned_status, len(self.history))
+
+    def convert_to_curl(self, request_object):
+        command = "curl -X {method} -H {headers} -d {data} {uri}"
+        method = request_object.method
+        uri = request_object.url
+        data = request_object.body
+        headers = ["{0}: {1}".format(k, v) for k, v in request_object.headers.items()]
+        headers = " -H ".join(headers)
+        return command.format(method=method, headers=headers, data=data, uri=uri)
