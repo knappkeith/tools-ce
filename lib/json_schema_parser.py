@@ -4,7 +4,19 @@ import json_tools
 
 class JSON_Schema_Parser(object):
     def __init__(self, json_obj, auto_gen=True):
-        self.json_obj = json_obj
+        if isinstance(json_obj, str):
+            try:
+                a = json.loads(json_obj)
+            except ValueError:
+                a = json_obj.replace("\n", "")
+                a = a.replace("\r", "")
+                a = json.loads(a)
+            a = json.dumps(a)
+        elif isinstance(json_obj, dict):
+            a = json.dumps(json_obj)
+        else:
+            a = json_obj
+        self.json_obj = a
         self._load_json()
         if auto_gen:
             self.build_schema()

@@ -35,7 +35,6 @@ def build_tuple(item):
         rtn_item[json_name]["minItems"] = 0
         for thing in item[1]:
             rtn_item[json_name][property_or_item(json_type, json_name)].update(dict(build_item(thing)))
-    print rtn_item
     return rtn_item
 
 

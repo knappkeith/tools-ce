@@ -1,0 +1,11 @@
+FieldAware Cloud Elements Staging Console
+
+javascript:(function(){var user = 'staging@fieldaware.com';var pass = '3lements!5';var url = 'https://staging.cloud-elements.com/elements/jsp/login.jsp';if (window.location.href == url){document.getElementById('textfield-1024-inputEl').value = user;document.getElementById('textfield-1025-inputEl').value = pass;document.getElementById('button-1027-btnInnerEl').click();}else{window.location.href = url}})();
+
+Passtime Cloud Elements Prod Console
+
+javascript:(function(){var user = 'passtime@cloud-elements.com';var pass = 'P@33t1meUSA';var url = 'https://api.cloud-elements.com/elements/jsp/login.jsp';if (window.location.href == url){document.getElementById('textfield-1024-inputEl').value = user;document.getElementById('textfield-1025-inputEl').value = pass;document.getElementById('button-1027-btnInnerEl').click();}else{window.location.href = url}})();
+
+TEMPLATE
+
+javascript:(function(){var user = '';var pass = '';var url = '';if (window.location.href == url){document.getElementById('textfield-1024-inputEl').value = user;document.getElementById('textfield-1025-inputEl').value = pass;document.getElementById('button-1027-btnInnerEl').click();}else{window.location.href = url}})();

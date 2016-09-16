@@ -1,0 +1,71 @@
+## To Copy between <code> and </code> in Formula UI
+
+#### Readable version
+javascript:(
+    function(){
+        var html = document.activeElement.innerHTML;
+        var startNum = html.search("x-grid-row-selected");
+        html = html.substring(startNum, html.length);
+        var startNum = html.search("<code>");
+        var endNum = html.search("</code>");
+        if(startNum>0){
+            if(html.substring(startNum + 6, endNum).length >= 32){
+                var myWindow = window.open("", "", "width=700, height=700");
+                myWindow.document.write("<code style=white-space:pre>"+html.substring(startNum + 6, endNum)+"</code>");
+                myWindow.document.getElementsByTagName('html')[0].setAttribute("contenteditable","");
+            }else{
+                window.prompt("Copy to clipboard: Ctrl+C, Enter", html.substring(startNum + 6, endNum));
+            }
+        }else{
+            window.alert("<code> Tag not Found!")
+        }
+    }
+)();
+
+### Compact Version for Bookmark
+javascript:(function(){var html = document.activeElement.innerHTML;var startNum = html.search("x-grid-row-selected");html = html.substring(startNum, html.length);var startNum = html.search("<code>");var endNum = html.search("</code>");if(startNum>0){if(html.substring(startNum + 6, endNum).length >= 32){var myWindow = window.open("", "", "width=700, height=700");myWindow.document.write("<code style=white-space:pre>"+html.substring(startNum + 6, endNum)+"</code>");myWindow.document.getElementsByTagName('html')[0].setAttribute("contenteditable","");}else{window.prompt("Copy to clipboard: Ctrl+C, Enter", html.substring(startNum + 6, endNum));}}else{window.alert("<code> Tag not Found!")}})();
+
+
+## To add default to active text box, for JIRA mostly
+
+#### Readable version
+javascript:(
+    function(){
+        document.activeElement.value = 
+            'h3. Description\n
+            ----\n
+            _italic_\n
+            *bold*\n
+            -strike-through-\n
+            +underlined+\n
+            x ^superscript^\n
+            n ~subscript~\n
+            +-_*bold-italic-underline-strikethrough*_-+\n
+            \n
+            h3. Environment\n
+            ----\n
+            \n
+            h3.Steps to Reproduce\n
+            ----\n
+            # Go to here\n
+            # Click on such-n-such\n
+            -# notice\n
+            -# do this\n
+            # Step Two\n
+            \n
+            h3.Expected Behavior\n
+            ----\n
+            {code}\n
+            This JSON\n
+            {code}\n
+            \n
+            h3.Actual Behavior\n
+            ----\n
+            {{This Error}}';
+    }
+)();
+
+### Compact Version for Bookmark
+javascript:(function(){document.activeElement.value='h3. Description\n----\n_italic_\n*bold*\n-strike-through-\n+underlined+\nx ^superscript^\nn ~subscript~\n+-_*bold-italic*_-+\n\nh3. Environment\n----\n\nh3.Steps to Reproduce\n----\n# +Goto blah blah+\n# -Click on such-n-such-\n-# notice, sub item\n-# second subitem\n--* whao, sub sub item\n# close site\n\nh3.Expected Behavior\n----\n* list\nbq. this is just an example\n\nh3.Actual Behavior\n----\n{color:red}\n    look ma, red text!\n{color}\n\n{panel:title=My Title|borderStyle=dashed|borderColor=#ccc|titleBGColor=#F7D6C1|bgColor=#FFFFCE}\na block of text surrounded with a *panel*\nyet _another_ line\n{panel}';})();
+
+javascript:(function(){document.activeElement.value = 'h3. Description\n----\n_italic_\n*bold*\n-strike-through-\n+underlined+\nx ^superscript^\nn ~subscript~\n+-_*bold-italic-underline-strikethrough*_-+\n\nh3. Environment\n----\n\nh3.Steps to Reproduce\n----\n# Go to here\n# Click on such-n-such\n-# notice\n-# do this\n# Step Two\n\nh3.Expected Behavior\n----\n{code}\nThis JSON\n{code}\n\nh3.Actual Behavior\n----\n{{This Error}}';})();
