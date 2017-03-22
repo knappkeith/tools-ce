@@ -1,0 +1,16 @@
+{
+  "name": "ce-bug-repros",
+  "main": "./index.js",
+  "description": "Project for reproducing CE bugs",
+  "version": "0.0.0",
+  "license": "© 2016 Nintex",
+  "dependencies": {
+    "node-uuid": "^1.4.7",
+    "request": "^2.73.0",
+    "request-promise": "^4.1.1"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+

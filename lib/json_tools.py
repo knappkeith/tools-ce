@@ -1,6 +1,7 @@
 import json
 import unicodedata
 
+
 def build_item(item):
     if isinstance(item, tuple):
         return build_tuple(item)
@@ -22,19 +23,21 @@ def build_tuple(item):
         return rtn_item
     rtn_item[json_name] = {}
     if json_type == "null":
-        rtn_item[json_name]["anyOf"] = [{"type": "null"},{"type": "string"}]
+        rtn_item[json_name]["anyOf"] = [{"type": "null"}, {"type": "string"}]
     else:
         rtn_item[json_name]["type"] = json_type
     if json_type == "object":
         rtn_item[json_name][property_or_item(json_type, json_name)] = {}
         rtn_item[json_name]["required"] = list(str(a) for a in item[1].keys())
         for thing in item[1].items():
-            rtn_item[json_name][property_or_item(json_type, json_name)].update(dict(build_item(thing)))
+            rtn_item[json_name][property_or_item(
+                json_type, json_name)].update(dict(build_item(thing)))
     if json_type == "array":
         rtn_item[json_name][property_or_item(json_type, json_name)] = {}
         rtn_item[json_name]["minItems"] = 0
         for thing in item[1]:
-            rtn_item[json_name][property_or_item(json_type, json_name)].update(dict(build_item(thing)))
+            rtn_item[json_name][property_or_item(
+                json_type, json_name)].update(dict(build_item(thing)))
     return rtn_item
 
 
@@ -75,10 +78,12 @@ def property_or_item(json_type, json_name):
 
 
 def load_str_to_json(json_str):
-    # Changes the passed string into valid json data string to be used for the request
+    # Changes the passed string into valid json data string
+    # to be used for the request.
     # This function will forcefully remove any unicode characters
     if isinstance(json_str, unicode):
-        str_to_use = unicodedata.normalize('NFKD', json_str).encode('ascii','ignore')
+        str_to_use = unicodedata.normalize(
+            'NFKD', json_str).encode('ascii', 'ignore')
     elif isinstance(json_str, dict):
         str_to_use = json.dumps(json_str)
     else:
