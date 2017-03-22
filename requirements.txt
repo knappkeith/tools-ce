@@ -1,3 +1,2 @@
 requests
-pytest
-jsonschema
+https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/7oars/stopwatch-0.3.1.tar.gz
