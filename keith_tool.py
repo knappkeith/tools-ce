@@ -28,49 +28,53 @@ def find_execution_that_isnt_pending(session):
     total_count = 0
     for executions in my_iter:
         total_count += len(executions.json())
-        print "Got {num}({total} total) executions with next page token of: {token}".format(num=len(executions.json()), token=executions.headers.get('Elements-Next-Page-Token'), total=total_count)
+        print "Got {num}({total} total) executions with next page token of: {token}".format(
+            num=len(executions.json()),
+            token=executions.headers.get('Elements-Next-Page-Token'),
+            total=total_count)
         for execution in executions.json():
             if execution['status'] != "pending":
-                cont = raw_input("Execution {exec_num} has a status of {status}, continue? (Y/N)".format(exec_num=execution['id'], status=execution['status']))
+                cont = raw_input(
+                    "Execution {exec_num} has a status of {status}, continue? (Y/N)".format(
+                        exec_num=execution['id'], status=execution['status']))
                 if cont.upper() == "N":
                     return
 
-def print_all_step_executions_to_file(session):
-    for execution in MY_EXECUTION_IDS:
-        print "Getting execution: {0}".format(execution)
-        my_execution_steps_iter = get_all(
-            my_url_path=FORMULA_EXECUTION_STEPS_URL.format(executionId=execution),
-            my_session=session)
-        print "Got execution: {0}".format(execution)
-        with open(FILE_PATH.format(execution_id=execution), 'w') as fd:
-            write_str = "[\n"
-            total_count = 0
-            for my_iter in my_execution_steps_iter:
-                my_execution_steps = my_iter[0]
-                fd.write(write_str)
-                write_str = ","
-                total_count += len(my_execution_steps)
-                print "Got a new set with {0} steps and a next page token of '{1}'".format(len(my_execution_steps), my_iter[1])
-                for index in range(0, len(my_execution_steps)):
-                    my_values = session.send_request(
-                        method='get',
-                        url_path=FORMULA_STEP_VALUES_URL.format(
-                            stepExecutionId=my_execution_steps[index]['id'])).json()
-                    new_dict = dict(my_execution_steps[index])
-                    new_dict['values'] = my_values
-                    fd.writelines(json.dumps(
-                        new_dict,
-                        indent=4,
-                        sort_keys=True,
-                        separators=(',', ': ')))
-                    if index != len(my_execution_steps) - 1:
-                        fd.write(",")
-                    print "Getting Step Values {0}/{1} ({2} total so far) for execution step: {3}".format(
-                        index,
-                        len(my_execution_steps),
-                        total_count,
-                        my_execution_steps[index]['id'])
-            fd.write("]")
+def print_all_step_executions_to_file(session, execution_id):
+    print "Initializing Generator for Execution ID: {0}".format(execution)
+    my_execution_steps_iter = session.send_request_iter(
+        method='get',
+        url_path=FORMULA_EXECUTION_STEPS_URL.format(executionId=execution_id))
+    print "Obtained Generator for Execution ID: {0}".format(execution)
+    with open(FILE_PATH.format(execution_id=execution_id), 'w') as fd:
+        write_str = "[\n"
+        total_count = 0
+        for my_iter in my_execution_steps_iter:
+            my_execution_steps = my_iter.json()
+            fd.write(write_str)
+            write_str = ","
+            total_count += len(my_execution_steps)
+            print "Got a new set with {num_steps} steps and a next page token of '{token}'".format(num_steps=len(my_execution_steps), token=my_iter.headers.get('Elements-Next-Page-Token'))
+            for index in range(0, len(my_execution_steps)):
+                my_values = session.send_request(
+                    method='get',
+                    url_path=FORMULA_STEP_VALUES_URL.format(
+                        stepExecutionId=my_execution_steps[index]['id'])).json()
+                new_dict = dict(my_execution_steps[index])
+                new_dict['values'] = my_values
+                fd.writelines(json.dumps(
+                    new_dict,
+                    indent=4,
+                    sort_keys=True,
+                    separators=(',', ': ')))
+                if index != len(my_execution_steps) - 1:
+                    fd.write(",")
+                print "Getting Step Values {index}/{current_total} ({total} total so far) for execution step: {execution_step_id}".format(
+                    index=index,
+                    current_total=len(my_execution_steps),
+                    total=total_count,
+                    execution_step_id=my_execution_steps[index]['id'])
+        fd.write("]")
 
 if __name__ == "__main__":
     my_request = lib.ce_request.CloudElementsPlatform(

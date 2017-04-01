@@ -7,14 +7,12 @@ import lib.ce_request
 import json
 
 
-FORMULA_INSTANCE_ID = "3647"
+FORMULA_INSTANCE_ID = "12397"
 FORMULA_EXECUTION_URL = "{formula_instance_id}/executions".format(formula_instance_id=FORMULA_INSTANCE_ID)
 FORMULA_EXECUTION_STEPS_URL = "executions/{executionId}/steps"
 FORMULA_STEP_VALUES_URL = "executions/steps/{stepExecutionId}/values"
 BASE_URL = "https://console.cloud-elements.com/elements/api-v2/formulas/instances"
-AUTH_HEADER = "User GvFGhARhkncvl9NAP57ArDpn2hwqTd58N2WgfP/XTB4=, Organization 0760ec2bb80346bd3c4ffc952a3cadb1"
-SEARCH_VALUE = "W01012944-1"
-SKIP_TO_ID = ''
+AUTH_HEADER = "User gS9xXNOSrebnb0BS956HWNUHMw+iaeHEx1PoMc/Ql9Q=, Organization 89341d5d002f3091e5cd5876d7ed8ff0"
 
 
 if __name__ == "__main__":
@@ -34,19 +32,11 @@ if __name__ == "__main__":
         unfiltered_executions = my_session.get_all_objects(object_path=FORMULA_EXECUTION_URL)
         
         # Filter out all executions before `SKIP_TO_ID`
-        if SKIP_TO_ID != '':
-            skipping = True
-        else:
-            skipping = False
         for item in unfiltered_executions:
-            if skipping:
-                if str(item['id']) == str(SKIP_TO_ID):
-                    skipping = False
-                    executions.append(item)
-                else:
-                    skipped += 1
-            else:
+            if item['status'] != 'success':
                 executions.append(item)
+            else:
+                skipped += 1
 
         print "{num} executions found!".format(num=len(unfiltered_executions))
         print "{num} executions skipped!".format(num=skipped)
@@ -70,27 +60,40 @@ if __name__ == "__main__":
                     executionId=execution['id']))
             
             # Loop over Steps
+            product_body = ""
+            trigger_body = ""
             for step in steps:
-                if step['stepName'] == 'trigger':
+                if step['stepName'] == 'Get_CRM_Product':
                     
                     # Get Step Values
                     values = my_session.send_request(
                         method='get',
                         url_path=FORMULA_STEP_VALUES_URL.format(stepExecutionId=step['id'])).json()
-                    
                     # Loop over Values
                     for value in values:
-                        try:
-                            if value['key'] == 'trigger.event':
-                                
-                                # Search Value for SEARCH_VALUE
-                                if SEARCH_VALUE.upper() in value['value'].upper():
-                                    print "    {execution_id}: {status} ({time})".format(
-                                        execution_id=execution['id'], status=execution['status'], time=execution['createdDate'])
-                                    results.append("{execution_id}: {status} ({time})".format(
-                                        execution_id=execution['id'], status=execution['status'], time=execution['createdDate']))
-                        except:
-                            print json.dumps(values, indent=2)
+                        if value['key'] == 'Get_CRM_Product.response.body':
+                            body_json = json.loads(value['value'])
+                            if len(body_json) > 1:
+                                names = [x['attributes']['name'] for x in body_json]
+                                product_body =" <--> ".join(names)
+                if step['stepName'] == 'Get_QB_Invoice':
+
+                    # Get Step Values
+                    values = my_session.send_request(
+                        method='get',
+                        url_path=FORMULA_STEP_VALUES_URL.format(stepExecutionId=step['id'])).json()
+                    # Loop over Values
+                    for value in values:
+                        if value['key'] == 'Get_QB_Invoice.response.body':
+                            body_json = json.loads(value['value'])
+                            if 'Other' in body_json:
+                                trigger_body = "{}({})".format(body_json['Other'], body_json['TxnID'])
+            if product_body != "" and trigger_body != "":
+                my_str = "{}: {}".format(trigger_body, product_body)
+                if my_str not in results:
+                    results.append(my_str)
+
+
     finally:
         print "\n\nRESULTS:"
         print "    Executions Found: {}".format(len(unfiltered_executions))

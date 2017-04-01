@@ -3,8 +3,9 @@ import common
 
 
 class CloudElementsRequests(requests.Session):
-    def __init__(self):
+    def __init__(self, base_url):
         super(CloudElementsRequests, self).__init__()
+        self.base_url = base_url
         self.headers['Accept'] = 'application/json'
         self.history = []
         self.history_limit = 100
@@ -65,17 +66,25 @@ class CloudElementsRequests(requests.Session):
 
     def get_all_objects(self, object_path, **kwargs):
         all_objects = []
-        my_iter = self.send_request_iter(method='get', url_path=object_path, **kwargs)
+        my_iter = self.send_request_iter(
+            method='get', url_path=object_path, **kwargs)
         for itereration in my_iter:
             all_objects.extend(itereration.json())
         return all_objects
 
     def _build_url(self, addition_to_path):
-        a = self.base_url.split("/")
-        while a[-1] == "":
-            a = a[0:-1]
-        a.append(addition_to_path)
-        return "/".join(a)
+        if "//" in self.base_url:
+            scheme = self.base_url.split("//")[0]
+            a = self.base_url.split("//")[1].split("/")
+        else:
+            scheme = "https:"
+            a = self.base_url.split("/")
+        b = []
+        for i in a:
+            if i != "":
+                b.append(i)
+        b.append(addition_to_path)
+        return "{scheme}//{path}".format(scheme=scheme, path="/".join(b))
 
     @property
     def last_call(self, attribute=None):
@@ -98,12 +107,12 @@ class CloudElementsRequests(requests.Session):
 
 
 class CloudElementsPlatform(CloudElementsRequests):
-    def __init__(self, base_url, auth_header=None):
-        super(CloudElementsPlatform, self).__init__()
+    def __init__(self, base_url, auth_header=None, use_cache=True):
+        super(CloudElementsPlatform, self).__init__(base_url=base_url)
         if auth_header:
             self.headers['Authorization'] = self._parse_auth_token(auth_header)
-        self.base_url = base_url
         self.my_cache = {}
+        self.use_cache = use_cache
 
     def _parse_auth_token(self, auth_header):
         if isinstance(auth_header, (str, unicode)):
@@ -116,22 +125,37 @@ class CloudElementsPlatform(CloudElementsRequests):
             return "User {user}, Organization {org}".format(
                 user=auth_header['user'], org=auth_header['organization'])
 
-    def get_formulas(self):
-        if "formulas" in self.my_cache:
-            return self.my_cache['formulas']
+    def _get_all_objects(self, object_path):
+        if self.use_cache and self.my_cache.get(object_path, None):
+            return self.my_cache[object_path]
         else:
-            my_request = self.send_request(
-                method='get',
-                url_path="/elements/api-v2/formulas")
-            if my_request.status_code != 200:
-                raise Exception(
-                    "There was an error getting Formulas: {request}".format(
-                        request=self.generate_last_printout()))
-            else:
-                self.my_cache['formulas'] = my_request.json()
-                return my_request.json()
+            my_objects = self.get_all_objects(object_path=object_path)
+            self.my_cache[object_path] = my_objects
+            return my_objects
+
+    def get_formulas(self):
+        '''
+        Return all formulas
+        '''
+        return self._get_all_objects(object_path=PlatformUrls.FORMULAS)
+
+    def post_formulas(self, formula_json):
+        '''
+        Post a new formula, Returns response object
+        '''
+        response = self.send_request(
+            method='post',
+            url_path=PlatformUrls.FORMULAS,
+            json=formula_json)
+        if response.status_code == 200 and self.my_cache.get(PlatformUrls.FORMULAS):
+            del self.my_cache[PlatformUrls.FORMULAS]
+        return response
+
 
     def get_formula_by_name(self, formula_name):
+        '''
+        Return a formula that matches ``formula_name``
+        '''
         formulas = self.get_formulas()
         formulas = [x for x in formulas if x['name'] == formula_name]
         if len(formulas) == 0:
@@ -144,20 +168,72 @@ class CloudElementsPlatform(CloudElementsRequests):
         else:
             return formulas[0]
 
-    def get_formula_execution_step_values(self, formula_id, formula_execution_id):
+    def patch_formula(self, formula_id, formula_json):
         '''
-        Returns a composite json of all the execution data for an execution
-        including all the step details
+        Update a formula
         '''
-        self.get_all_objects()
+        response = self.send_request(
+            method='patch',
+            url_path=FORMULAS_ID.format(formula_id=formula_id),
+            json=formula_json)
+        if response.status_code == 200 and self.my_cache.get(PlatformUrls.FORMULAS):
+            del self.my_cache[PlatformUrls.FORMULAS]
+        return response
+
+    def get_formula_instances(self, formula_id):
+        '''
+        Returns all the instance ids of a formula id
+        '''
+        return self._get_all_objects(
+            object_path=PlatformUrls.FORMULA_INSTANCES.format(
+                formula_id=formula_id))
+
+    def get_formula_executions(self, instance_id):
+        '''
+        Returns all the executions for a formula instance
+        '''
+        return self._get_all_objects(
+            object_path=PlatformUrls.FORMULA_EXECUTIONS.format(
+                instance_id=instance_id))
+
+    def get_formula_execution_steps(self, execution_id, filter_steps=[]):
+        '''
+        Returns all the execution steps for a formula execution
+        '''
+        my_steps = self._get_all_objects(
+            object_path=PlatformUrls.FORMULA_EXECUTION_STEPS.format(
+                execution_id=execution_id))
+        if len(filter_steps) > 0:
+            return [x for x in my_steps if x['stepName'] in filter_steps]
+        else:
+            return my_steps
+
+    def get_formula_execution_step_values(self, step_execution_id):
+        '''
+        Returns all the execution step values for a formula execution step
+        '''
+        return self._get_all_objects(
+            object_path=PlatformUrls.FORMULA_EXECUTION_STEP_VALUES.format(
+                step_execution_id=step_execution_id))
+
+    def get_formula_execution_steps_with_values(self, execution_id):
+        '''
+        Returns a concatenated JSON of all the steps with the values
+        in the step info
+        '''
+        my_steps = self.get_formula_execution_steps(execution_id=execution_id)
+        for step in my_steps:
+            step['values'] = self.get_formula_execution_step_values(
+                step_execution_id=step['id'])
+
 
 class CloudElementsElement(CloudElementsRequests):
-    def __init__(self, base_url, auth_header=None):
-        super(CloudElementsElement, self).__init__()
+    def __init__(self, base_url, auth_header=None, use_cache=True):
+        super(CloudElementsElement, self).__init__(base_url=base_url)
         if auth_header:
             self.headers['Authorization'] = self._parse_auth_token(auth_header)
-        self.base_url = base_url
         self.my_cache = {}
+        self.use_cache = use_cache
 
     def _parse_auth_token(self, auth_header):
         if isinstance(auth_header, (str, unicode)):
@@ -171,3 +247,19 @@ class CloudElementsElement(CloudElementsRequests):
                 user=auth_header['user'],
                 org=auth_header['organization'],
                 token=auth_header['element'])
+
+
+class PlatformUrls(object):
+    API_PATH = "/elements/api-v2"
+    FORMULAS = "{api}/formulas".format(
+        api=API_PATH)
+    FORMULAS_ID = "{api}/formulas/{{formula_id}}".format(
+        api=API_PATH)
+    FORMULA_INSTANCES = "{api}/formulas/{{formula_id}}/instances".format(
+        api=API_PATH)
+    FORMULA_EXECUTIONS = "{api}/formulas/instances/{{instance_id}}/executions".format(
+        api=API_PATH)
+    FORMULA_EXECUTION_STEPS = "{api}/formulas/instances/executions/{{execution_id}}/steps".format(
+        api=API_PATH)
+    FORMULA_EXECUTION_STEP_VALUES = "{api}/formulas/instances/executions/steps/{{step_execution_id}}/values".format(
+        api=API_PATH)
